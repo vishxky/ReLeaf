@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabaseClient';
 import { useToast } from "@/components/ui/use-toast";
+import { authAPI } from '@/lib/apiClient';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -32,26 +32,20 @@ export default function RequestPasswordReset() {
     setLoading(true);
     setMessage('');
     try {
-      // Construct the redirect URL dynamically
-      const redirectUrl = `${window.location.origin}/update-password`;
-
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: redirectUrl,
-      });
-
-      if (error) throw error;
-
+      const result = await authAPI.requestPasswordReset(data.email);
+      
       setMessage('Password reset email sent! Please check your inbox.');
       toast({
         title: "Check your email",
-        description: "A password reset link has been sent to your email address.",
+        description: result.message,
       });
     } catch (error: any) {
-      console.error('Password reset request error:', error.message);
+      console.error('Password reset request error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send password reset email.';
       setMessage('Failed to send password reset email. Please try again.');
       toast({
         title: "Error",
-        description: error.message || "Failed to send password reset email.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -86,7 +80,7 @@ export default function RequestPasswordReset() {
             </Button>
           </form>
           {message && <p className="mt-4 text-sm text-center text-green-600">{message}</p>}
-           <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm">
             Remember your password?{' '}
             <Link to="/login" className="underline">
               Sign in
@@ -96,4 +90,4 @@ export default function RequestPasswordReset() {
       </Card>
     </div>
   );
-} 
+}

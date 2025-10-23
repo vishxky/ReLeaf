@@ -3,65 +3,34 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Gift, Star, Leaf, Tag, Clock, ShoppingBag, Award, AlertCircle } from 'lucide-react';
+import { Gift, Leaf, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabaseClient';
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface Reward {
-  id: string;
-  title: string;
-  description: string | null;
-  type: 'marketplace' | 'donation' | 'exclusive' | 'badge';
-  points_cost: number;
-  image_url: string | null;
-  partner_name: string | null;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface BadgeData {
-   id: string;
-   title: string;
-   description: string;
-   acquired: boolean;
-   date?: string;
-   icon: string;
-   progress?: number;
-}
+import { rewardAPI, type Reward } from '@/lib/apiClient';
 
 const Rewards = () => {
   const [activeTab, setActiveTab] = useState("marketplace");
-  const { profile, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading, refreshProfile } = useAuth();
   const { toast } = useToast();
 
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loadingRewards, setLoadingRewards] = useState(true);
   const [errorRewards, setErrorRewards] = useState<string | null>(null);
-  
-  const [userBadges, setUserBadges] = useState<BadgeData[]>([]);
 
   useEffect(() => {
     const fetchRewards = async () => {
       setLoadingRewards(true);
       setErrorRewards(null);
       try {
-        const { data, error } = await supabase
-          .from('rewards')
-          .select('*')
-          .eq('is_active', true)
-          .order('points_cost', { ascending: true });
-
-        if (error) throw error;
-        setRewards(data || []);
+        const data = await rewardAPI.getRewards();
+        setRewards(data.rewards);
       } catch (err: any) {
         console.error("Error fetching rewards:", err);
         setErrorRewards("Failed to load rewards.");
-        toast({ title: "Error", description: err.message || "Failed to load rewards.", variant: "destructive" });
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load rewards.';
+        toast({ title: "Error", description: errorMessage, variant: "destructive" });
       } finally {
         setLoadingRewards(false);
       }
@@ -75,58 +44,74 @@ const Rewards = () => {
 
   const currentPoints = profile?.points ?? 0;
   
-  const handleRedeem = (reward: Reward) => {
-     alert(`Redeem ${reward.title} - Logic not implemented yet.`);
+  const handleRedeem = async (reward: Reward) => {
+    try {
+      const result = await rewardAPI.redeemReward(reward.id);
+      toast({ 
+        title: "Success!", 
+        description: result.message,
+      });
+      // Refresh profile to get updated points
+      await refreshProfile();
+    } catch (err: any) {
+      console.error("Error redeeming reward:", err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to redeem reward.';
+      toast({ 
+        title: "Error", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
+    }
   }
   
   const renderRewardCard = (reward: Reward) => (
-     <Card key={reward.id} className="flex flex-col justify-between reward-card overflow-hidden">
-        <CardHeader className="p-0">
-          {reward.image_url ? (
-             <img 
-               src={reward.image_url} 
-               alt={reward.title} 
-               className="w-full h-40 object-cover" 
-               onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
-             />
-          ) : (
-             <div className="w-full h-40 bg-leafy-100 flex items-center justify-center">
-                <Gift className="h-12 w-12 text-leafy-300" />
-             </div>
-          )}
-        </CardHeader>
-        <CardContent className="p-4 flex-grow">
-          <CardTitle className="text-lg font-bold text-leafy-800 mb-1 leading-tight">{reward.title}</CardTitle>
-          {reward.partner_name && <p className="text-xs text-leafy-500 mb-2">Partner: {reward.partner_name}</p>}
-          <CardDescription className="text-sm text-leafy-600">{reward.description}</CardDescription>
-        </CardContent>
-        <CardFooter className="p-4 bg-leafy-50/50 border-t border-leafy-100 flex justify-between items-center">
-          <div className="flex items-center font-semibold text-leafy-700">
-             <Leaf className="h-4 w-4 mr-1 text-leafy-500" />
-             {reward.points_cost} pts
+    <Card key={reward.id} className="flex flex-col justify-between reward-card overflow-hidden">
+      <CardHeader className="p-0">
+        {reward.imageUrl ? (
+          <img 
+            src={reward.imageUrl} 
+            alt={reward.title} 
+            className="w-full h-40 object-cover" 
+            onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
+          />
+        ) : (
+          <div className="w-full h-40 bg-leafy-100 flex items-center justify-center">
+            <Gift className="h-12 w-12 text-leafy-300" />
           </div>
-          <Button 
-             size="sm" 
-             className="eco-button-outline text-xs" 
-             onClick={() => handleRedeem(reward)}
-             disabled={currentPoints < reward.points_cost}
-          >
-            {currentPoints >= reward.points_cost ? 'Redeem' : 'Need More Pts'}
-          </Button>
-        </CardFooter>
-     </Card>
+        )}
+      </CardHeader>
+      <CardContent className="p-4 flex-grow">
+        <CardTitle className="text-lg font-bold text-leafy-800 mb-1 leading-tight">{reward.title}</CardTitle>
+        {reward.partnerName && <p className="text-xs text-leafy-500 mb-2">Partner: {reward.partnerName}</p>}
+        <CardDescription className="text-sm text-leafy-600">{reward.description}</CardDescription>
+      </CardContent>
+      <CardFooter className="p-4 bg-leafy-50/50 border-t border-leafy-100 flex justify-between items-center">
+        <div className="flex items-center font-semibold text-leafy-700">
+          <Leaf className="h-4 w-4 mr-1 text-leafy-500" />
+          {reward.pointsCost} pts
+        </div>
+        <Button 
+          size="sm" 
+          className="eco-button-outline text-xs" 
+          onClick={() => handleRedeem(reward)}
+          disabled={currentPoints < reward.pointsCost}
+        >
+          {currentPoints >= reward.pointsCost ? 'Redeem' : 'Need More Pts'}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 
   const renderLoading = () => (
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-72 rounded-lg" />)}
-     </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-72 rounded-lg" />)}
+    </div>
   );
   
-   const renderError = (message: string) => (
+  const renderError = (message: string) => (
     <div className="text-center py-12">
-       <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-       <p className="text-red-600">{message}</p>
+      <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+      <p className="text-red-600">{message}</p>
     </div>
   );
   
@@ -150,9 +135,9 @@ const Rewards = () => {
               <div>
                 <p className="text-sm text-leafy-600">Your Points Balance</p>
                 {authLoading ? (
-                   <Skeleton className="h-8 w-24 mt-1" />
+                  <Skeleton className="h-8 w-24 mt-1" />
                 ) : (
-                   <p className="text-2xl font-bold text-leafy-800">{currentPoints}</p>
+                  <p className="text-2xl font-bold text-leafy-800">{currentPoints}</p>
                 )}
               </div>
             </div>
@@ -166,39 +151,39 @@ const Rewards = () => {
             </TabsList>
             
             <TabsContent value="marketplace" className="animate-grow origin-top">
-               {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
-                  marketplaceRewards.length > 0 ? (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {marketplaceRewards.map(renderRewardCard)}
-                          </div>
-                  ) : (
-                     <p className="text-center text-leafy-600 py-8">No marketplace rewards available right now.</p>
-                  )
-               )}
+              {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
+                marketplaceRewards.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {marketplaceRewards.map(renderRewardCard)}
+                  </div>
+                ) : (
+                  <p className="text-center text-leafy-600 py-8">No marketplace rewards available right now.</p>
+                )
+              )}
             </TabsContent>
             
             <TabsContent value="donations" className="animate-grow origin-top">
-               {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
-                  donationRewards.length > 0 ? (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {donationRewards.map(renderRewardCard)}
-                        </div>
-                  ) : (
-                     <p className="text-center text-leafy-600 py-8">No donation rewards available right now.</p>
-                  )
-               )}
+              {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
+                donationRewards.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {donationRewards.map(renderRewardCard)}
+                  </div>
+                ) : (
+                  <p className="text-center text-leafy-600 py-8">No donation rewards available right now.</p>
+                )
+              )}
             </TabsContent>
             
             <TabsContent value="exclusive" className="animate-grow origin-top">
-                {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
-                  exclusiveRewards.length > 0 ? (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {exclusiveRewards.map(renderRewardCard)}
-                        </div>
-                      ) : (
-                     <p className="text-center text-leafy-600 py-8">No exclusive rewards available right now.</p>
-                  )
-               )}
+              {loadingRewards ? renderLoading() : errorRewards ? renderError(errorRewards) : (
+                exclusiveRewards.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {exclusiveRewards.map(renderRewardCard)}
+                  </div>
+                ) : (
+                  <p className="text-center text-leafy-600 py-8">No exclusive rewards available right now.</p>
+                )
+              )}
             </TabsContent>
           </Tabs>
         </div>

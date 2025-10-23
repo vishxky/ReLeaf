@@ -8,70 +8,93 @@ ReLeaf is an innovative app that transforms sustainability into an engaging game
 
 ## Key Features
 
-*   **User Authentication:** Secure sign-up, sign-in, sign-out, and password recovery.
-*   **Login Streaks:** Tracks consecutive daily logins with visual badges for milestones (3, 7, 14, 30 days).
-*   **Points System:** Displays user points (earned through future challenge completions).
-*   **Profile Management:** View profile details (username, join date) and update basic information (name, age).
-*   **Rewards:** Browse available rewards (redemption logic pending).
-*   **Static Pages:** About, Community, Leaderboard placeholders.
-*   **Gamified Challenges:** (Challenge viewing/details implemented, completion logic pending).
-*   **Responsive Design:** Adapts to different screen sizes.
+*   **🔐 User Authentication:** Secure JWT-based sign-up, sign-in, and password recovery
+*   **🔥 Login Streaks:** Automatic tracking of consecutive daily logins
+*   **⭐ Points System:** Earn points by completing eco-friendly challenges
+*   **👤 Profile Management:** Customizable user profiles with name, age, and statistics
+*   **🎁 Rewards Store:** Redeem points for real-world rewards and donations
+*   **🌱 Eco Challenges:** Daily, weekly, and monthly sustainability challenges
+*   **📊 Progress Tracking:** Monitor your challenge completion and environmental impact
+*   **📱 Responsive Design:** Seamless experience across desktop, tablet, and mobile devices
 
 ## Tech Stack
 
-*   **Framework:** React (v18 Functional Components + Hooks) with Vite
-*   **Language:** TypeScript
-*   **Routing:** React Router (v6)
-*   **Backend / API:** Supabase (Authentication, Database, Functions)
-*   **State Management:** React Context API (`AuthContext`)
-*   **UI Library:** shadcn/ui (Radix UI + Tailwind CSS)
-*   **Styling:** Tailwind CSS
-*   **Form Handling:** React Hook Form (v7)
-*   **Schema Validation:** Zod
-*   **Icons:** Lucide React
-*   **Package Manager:** Bun
+### MERN Stack
+
+*   **MongoDB:** NoSQL database for users, profiles, challenges, and rewards
+*   **Express.js:** RESTful API backend with JWT authentication
+*   **React:** Modern frontend framework (v18) with Vite build tool
+*   **Node.js:** Server runtime environment
+
+### Frontend Technologies
+
+*   **TypeScript:** Type-safe development
+*   **React Router (v6):** Client-side routing
+*   **Context API:** State management for authentication
+*   **Axios:** HTTP client with request/response interceptors
+*   **shadcn/ui:** Beautiful UI components built on Radix UI
+*   **Tailwind CSS:** Utility-first CSS framework
+*   **React Hook Form:** Performant form validation
+*   **Zod:** TypeScript-first schema validation
+*   **Lucide React:** Modern icon library
+
+### Backend Technologies
+
+*   **Mongoose ODM:** Elegant MongoDB object modeling
+*   **JWT:** Secure token-based authentication
+*   **bcryptjs:** Password hashing and salting
+*   **Express Middleware:** CORS, JSON parsing, error handling
+*   **Environment Variables:** Secure configuration management
 
 ## Getting Started
 
 ### Prerequisites
 
 *   Node.js (v18 or higher recommended)
-*   Bun (v1.1 or higher recommended)
-*   A Supabase account and project.
+*   MongoDB (local installation or MongoDB Atlas account)
+*   npm or Bun package manager
 
-### Setup
+### Quick Setup
 
-1.  **Clone the repository:**
+> 🚀 **New to the project?** See [QUICKSTART.md](QUICKSTART.md) for a 5-minute setup guide!
+
+**Detailed documentation:** [MERN_SETUP.md](MERN_SETUP.md)
+
+1.  **Clone and install:**
     ```bash
     git clone https://github.com/mist-ic/ReLeaf.git
     cd ReLeaf
+    npm install
+    cd server && npm install && cd ..
     ```
 
-2.  **Install dependencies using Bun:**
+2.  **Configure environment:**
     ```bash
-    bun install
+    # Backend config
+    cd server
+    cp .env-example .env
+    # Edit server/.env with MongoDB URI and JWT secret
+    
+    # Frontend config (in root)
+    cd ..
+    echo "VITE_API_URL=http://localhost:5000/api" > .env
     ```
 
-3.  **Set up environment variables:**
-    *   Create a Supabase project at [supabase.com](https://supabase.com/).
-    *   Navigate to your project's **Settings > API**.
-    *   Copy the **Project URL** and the **anon public key**.
-    *   Rename the `.env.example` file in the project root to `.env`.
-    *   Paste your Project URL and anon key into the `.env` file:
-        ```dotenv
-        VITE_SUPABASE_URL=YOUR_PROJECT_URL
-        VITE_SUPABASE_ANON_KEY=YOUR_ANON_PUBLIC_KEY
-        ```
-
-4.  **Run the Supabase database migrations (Optional but recommended for local development):**
-    *   If you want the database functions (`update_login_streak`) and triggers (`handle_new_user`) locally, you can copy the SQL commands from the migrations applied via the assistant (check conversation history or Supabase dashboard SQL editor history) and run them in your Supabase project's SQL editor.
-
-5.  **Run the development server:**
+3.  **Seed database:**
     ```bash
-    bun run dev
+    cd server && npm run seed && cd ..
     ```
 
-6.  Open [http://localhost:5173](http://localhost:5173) (or the port specified in the output) in your browser.
+4.  **Run the app (2 terminals):**
+    ```bash
+    # Terminal 1: Backend
+    cd server && npm run dev
+    
+    # Terminal 2: Frontend
+    npm run dev
+    ```
+
+5.  Open [http://localhost:5173](http://localhost:5173) in your browser
 
 ## Screenshots
 
@@ -87,15 +110,59 @@ ReLeaf is an innovative app that transforms sustainability into an engaging game
 
 ## Deployment
 
-This app is configured for deployment on Netlify using Bun. Pushing to the main branch should trigger automatic builds based on `netlify.toml`.
+### Frontend
+Deploy the React app to Netlify, Vercel, or similar:
+- Set `VITE_API_URL` to your production backend URL
+- Build command: `npm run build`
+- Publish directory: `dist`
 
-Ensure your Supabase environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) are set in the Netlify site's **Build & deploy > Environment** settings.
+### Backend
+Deploy the Express server to Render, Railway, or Heroku:
+- Set environment variables: `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`
+- Start command: `cd server && npm start`
+
+### Database
+Use MongoDB Atlas (free tier available):
+- Create cluster and get connection string
+- Add to `MONGODB_URI` in backend environment
+
+**Full deployment guide:** [MERN_SETUP.md](MERN_SETUP.md)
+
+## API Documentation
+
+The backend provides RESTful API endpoints:
+
+**Authentication**
+- `POST /api/auth/register` - Create new account
+- `POST /api/auth/login` - Login user
+- `GET /api/auth/me` - Get current user
+
+**Challenges**
+- `GET /api/challenges` - List all challenges
+- `POST /api/challenges/:id/start` - Start a challenge
+- `PUT /api/challenges/:id/complete` - Complete a challenge
+
+**Rewards**
+- `GET /api/rewards` - List all rewards
+- `POST /api/rewards/:id/redeem` - Redeem a reward
+
+**Profiles**
+- `GET /api/profiles/:userId` - Get user profile
+- `PUT /api/profiles/:userId` - Update profile
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
 
 ## Learn More
 
+*   [MongoDB Documentation](https://docs.mongodb.com/)
+*   [Express.js Documentation](https://expressjs.com/)
 *   [React Documentation](https://reactjs.org/)
-*   [Vite Documentation](https://vitejs.dev/)
-*   [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-*   [Shadcn/ui Documentation](https://ui.shadcn.com/)
-*   [TanStack Query Documentation](https://tanstack.com/query/latest)
-*   [React Router Documentation](https://reactrouter.com/)
+*   [Node.js Documentation](https://nodejs.org/)
+*   [Tailwind CSS](https://tailwindcss.com/docs)
+*   [shadcn/ui](https://ui.shadcn.com/)

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabaseClient';
 import { useToast } from "@/components/ui/use-toast";
+import { authAPI } from '@/lib/apiClient';
 
 // Schema includes password confirmation
 const formSchema = z.object({
@@ -16,7 +16,7 @@ const formSchema = z.object({
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
-  path: ["confirmPassword"], // path of error
+  path: ["confirmPassword"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -24,9 +24,11 @@ type FormData = z.infer<typeof formSchema>;
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [searchParams] = useSearchParams();
+  const resetToken = searchParams.get('token');
   const { toast } = useToast();
   const navigate = useNavigate();
+  
   const {
     register,
     handleSubmit,
@@ -35,51 +37,40 @@ export default function UpdatePassword() {
     resolver: zodResolver(formSchema),
   });
 
-  // Listen for the PASSWORD_RECOVERY event
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setShowForm(true);
-        // Supabase automatically handles the session recovery from the URL hash
-      }
-    });
-
-    // Check if the hash contains an error initially (e.g., expired token)
-    const hash = window.location.hash;
-    if (hash.includes('error_code=401')) {
-      setErrorMsg("Password reset link has expired or is invalid. Please request a new one.");
-      toast({ title: "Link Expired", description: "Please request a new password reset link.", variant: "destructive" });
-    } else if (hash.includes('error=')) {
-       setErrorMsg("An error occurred during password recovery. Please try again.");
-       toast({ title: "Recovery Error", description: "An unexpected error occurred.", variant: "destructive" });
+    if (!resetToken) {
+      setErrorMsg("No reset token found. Please request a new password reset link.");
+      toast({ 
+        title: "Invalid Link", 
+        description: "Please request a new password reset link.", 
+        variant: "destructive" 
+      });
     }
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
+  }, [resetToken, toast]);
 
   const onSubmit = async (data: FormData) => {
+    if (!resetToken) {
+      setErrorMsg("No reset token found.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.password,
-      });
-
-      if (error) throw error;
+      await authAPI.resetPassword(resetToken, data.password);
 
       toast({
         title: "Password Updated Successfully!",
         description: "You can now sign in with your new password.",
       });
-      navigate('/login'); // Redirect to login after successful update
+      navigate('/login');
     } catch (error: any) {
-      console.error('Password update error:', error.message);
+      console.error('Password update error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update password.';
       setErrorMsg('Failed to update password. Please try again.');
       toast({
         title: "Error updating password",
-        description: error.message || "Failed to update password.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -93,12 +84,12 @@ export default function UpdatePassword() {
         <CardHeader>
           <CardTitle>Set New Password</CardTitle>
           <CardDescription>
-            {showForm
+            {resetToken && !errorMsg
               ? 'Enter your new password below.'
               : errorMsg || 'Verifying reset link...'}
           </CardDescription>
         </CardHeader>
-        {showForm && !errorMsg && (
+        {resetToken && !errorMsg && (
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
@@ -135,4 +126,4 @@ export default function UpdatePassword() {
       </Card>
     </div>
   );
-} 
+}

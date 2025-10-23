@@ -6,21 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
-import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
+import { profileAPI } from '@/lib/apiClient';
 import { useToast } from "@/components/ui/use-toast";
 
 // Zod schema for profile data
 const profileSchema = z.object({
   name: z.string().min(1, { message: 'Name cannot be empty.' }).optional(),
   age: z.coerce.number().int().positive({ message: 'Age must be a positive number.' }).optional(),
-  // Add other profile fields here if needed
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export const ProfileForm: React.FC = () => {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -28,11 +27,11 @@ export const ProfileForm: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isDirty }, // Use isDirty to enable save button only on changes
+    formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: '', // Initialize with empty strings
+      name: '',
       age: undefined,
     },
   });
@@ -48,34 +47,31 @@ export const ProfileForm: React.FC = () => {
   }, [profile, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    if (!user) return; // Should not happen if component is rendered correctly
-    if (!isDirty) return; // Don't submit if no changes were made
+    if (!user) return;
+    if (!isDirty) return;
 
     setLoading(true);
     try {
-      const updates = {
-        id: user.id,
+      await profileAPI.updateProfile(user.id, {
         name: data.name,
-        age: data.age,
-        updated_at: new Date(), // Update timestamp
-      };
-
-      const { error } = await supabase.from('profiles').upsert(updates);
-
-      if (error) throw error;
+        age: data.age
+      });
 
       toast({
         title: "Profile Updated Successfully!",
       });
+      
       // Reset dirty state after successful submission
-      reset(data); 
-      // TODO: Potentially trigger a refresh of AuthContext profile data if needed
-
+      reset(data);
+      
+      // Refresh profile data in context
+      await refreshProfile();
     } catch (error: any) {
-      console.error('Error updating profile:', error.message);
+      console.error('Error updating profile:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
       toast({
         title: "Error updating profile",
-        description: error.message || "An unexpected error occurred.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -84,7 +80,7 @@ export const ProfileForm: React.FC = () => {
   };
 
   if (authLoading) {
-    return <p>Loading profile...</p>; // Or a spinner component
+    return <p>Loading profile...</p>;
   }
 
   return (
@@ -124,4 +120,4 @@ export const ProfileForm: React.FC = () => {
       </CardContent>
     </Card>
   );
-}; 
+};
