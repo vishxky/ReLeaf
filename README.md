@@ -2,9 +2,9 @@
 
 ReLeaf is an innovative app that transforms sustainability into an engaging game. Its main goal is to bridge the gap between environmental awareness and action by making eco-friendly habits fun, social, and rewarding.
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/21425508-9145-408a-a715-4c175a997654/deploy-status)](https://app.netlify.com/sites/releafy/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/f5bb5070-0daa-42c4-a58f-62391fe51973/deploy-status)](https://app.netlify.com/projects/theleafy/deploys)
 
-[Click here to visit the live site](https://releafy.netlify.app/)
+🌐 **[Visit Live Site](https://theleafy.netlify.app)** - Fully deployed and running!
 
 ## Key Features
 
@@ -110,21 +110,30 @@ ReLeaf is an innovative app that transforms sustainability into an engaging game
 
 ## Deployment
 
-### Frontend
-Deploy the React app to Netlify, Vercel, or similar:
-- Set `VITE_API_URL` to your production backend URL
+This application is **currently deployed** and running live at [theleafy.netlify.app](https://theleafy.netlify.app)
+
+### Production Stack
+- **Frontend:** Netlify - [theleafy.netlify.app](https://theleafy.netlify.app)
+- **Backend API:** Render - Express.js server
+- **Database:** MongoDB Atlas - Cloud-hosted database
+
+### Deploy Your Own Instance
+
+**Frontend (Netlify)**
+- Connect your GitHub repository
 - Build command: `npm run build`
 - Publish directory: `dist`
+- Environment variable: `VITE_API_URL` = your backend URL
 
-### Backend
-Deploy the Express server to Render, Railway, or Heroku:
-- Set environment variables: `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`
-- Start command: `cd server && npm start`
+**Backend (Render/Railway/Heroku)**
+- Deploy from `server/` directory
+- Environment variables: `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`
+- Start command: `node server.js`
 
-### Database
-Use MongoDB Atlas (free tier available):
-- Create cluster and get connection string
-- Add to `MONGODB_URI` in backend environment
+**Database (MongoDB Atlas)**
+- Create free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+- Get connection string
+- Add to backend `MONGODB_URI`
 
 **Full deployment guide:** [MERN_SETUP.md](MERN_SETUP.md)
 
@@ -150,6 +159,15 @@ The backend provides RESTful API endpoints:
 - `GET /api/profiles/:userId` - Get user profile
 - `PUT /api/profiles/:userId` - Update profile
 
+## Live Demo
+
+Visit the live application: **[theleafy.netlify.app](https://theleafy.netlify.app)**
+
+- Create an account
+- Complete eco-friendly challenges
+- Earn points and redeem rewards
+- Track your environmental impact!
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -157,12 +175,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT
-
-## Learn More
-
-*   [MongoDB Documentation](https://docs.mongodb.com/)
-*   [Express.js Documentation](https://expressjs.com/)
-*   [React Documentation](https://reactjs.org/)
-*   [Node.js Documentation](https://nodejs.org/)
-*   [Tailwind CSS](https://tailwindcss.com/docs)
-*   [shadcn/ui](https://ui.shadcn.com/)
