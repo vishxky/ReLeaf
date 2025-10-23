@@ -175,3 +175,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT
+
+## Learn More
+
+**MERN Stack Resources:**
+- [MongoDB Documentation](https://docs.mongodb.com/)
+- [Express.js Documentation](https://expressjs.com/)
+- [React Documentation](https://reactjs.org/)
+- [Node.js Documentation](https://nodejs.org/)
+
+**Frontend Libraries:**
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [React Router](https://reactrouter.com/)
