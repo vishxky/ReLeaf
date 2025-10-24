@@ -84,8 +84,8 @@ export interface CommunityPost {
 
 // Authentication API
 export const authAPI = {
-  register: async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await api.post('/auth/register', { email, password });
+  register: async (email: string, password: string, name?: string, age?: number): Promise<AuthResponse> => {
+    const response = await api.post('/auth/register', { email, password, name, age });
     return response.data;
   },
 

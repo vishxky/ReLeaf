@@ -3,7 +3,7 @@ const Filter = require('leo-profanity');
 // Configure the filter
 Filter.loadDictionary(); // Load default English dictionary
 
-// Hindi/Hinglish profanity words (119 words)
+// Hindi/Hinglish profanity words (expanded list)
 const hindiProfanity = [
   'aand', 'aandu', 'balatkar', 'balatkari', 'behen chod', 'beti chod',
   'bhadva', 'bhadve', 'bhandve', 'bhangi', 'bhootni ke', 'bhosad',
@@ -26,7 +26,30 @@ const hindiProfanity = [
   'randaap', 'randi', 'randi rona', 'saala', 'saala kutta',
   'saali kutti', 'saali randi', 'suar', 'suar ke lund', 'suar ki aulad',
   'tatte', 'tatti', 'teri maa ka bhosada', 'teri maa ka boba chusu',
-  'teri maa ka behenchod', 'teri maa ka chut', 'tharak', 'tharki', 'tu chuda'
+  'teri maa ka behenchod', 'teri maa ka chut', 'tharak', 'tharki', 'tu chuda',
+  // Additional words added for comprehensive filtering
+  'kutte ki zat', 'suar ki zat', 'gadhe ki aulad', 'gadhe ki zat',
+  'bandar ki aulad', 'bandar ki zat', 'bhains ki aulad', 'bhains ki zat',
+  'ullu ki aulad', 'ullu ki zat', 'lomdi ki aulad', 'lomdi ki zat',
+  'bhed ki aulad', 'bhed ki zat', 'bakri ki aulad', 'bakri ki zat',
+  'billi ki aulad', 'billi ki zat', 'mendhak ki aulad', 'mendhak ki zat',
+  'badir', 'badirchand', 'bakland', 'bhandwa', 'chinaal', 'ghassad',
+  'haram zada', 'hijra', 'takke', 'chakka', 'faggot', 'randhwa',
+  'jigolo', 'randi', 'bund', 'gandi', 'bhosdi wala', 'bhonsri wala',
+  'bhosri wala', 'boobley', 'chuchi', 'chuuche', 'chuchiyan',
+  'chut marike', 'land marike', 'gand mari ke', 'lavda', 'lawda',
+  'muth marna', 'muthi', 'baable', 'bur', 'chodna', 'chudna',
+  'chud', 'buuble', 'bhadwe', 'bhadwon', 'bhadwi', 'bhadwapanti',
+  'chodela', 'marana', 'marani', 'marane', 'gandphatu', 'gandphati',
+  'gandphata', 'gandphaton', 'gand marna', 'gand maru', 'gand mari',
+  'gand marana', 'jhaant', 'gand phatu', 'gand phati', 'gand phata',
+  'gand phaton', 'gandmarna', 'gandmaru', 'gandmarana', 'gandmari',
+  'randibazar', 'chodo', 'chodi', 'chodne', 'chodva', 'chudo',
+  'chudi', 'chudne', 'chudva', 'chodai', 'chuda', 'chudai',
+  'chudvana', 'haramia', 'haramzada', 'haramzadi', 'haramkhor',
+  'kamina', 'kamini', 'bhosdi', 'bhosdike', 'bhandwa', 'bhandi',
+  'bhadwi', 'randwa', 'randibazaar', 'hijade', 'chakka', 'lavda',
+  'lawda', 'lundwa', 'chutmar', 'chutiyapa', 'mc', 'bc', 'bsdk'
 ];
 
 // Add Hindi words to leo-profanity filter

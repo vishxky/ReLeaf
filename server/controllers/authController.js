@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+const { containsProfanity } = require('../utils/profanityFilter');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -14,7 +15,7 @@ const generateToken = (id) => {
 // @access  Public
 const register = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, name, age } = req.body;
 
     // Validation
     if (!email || !password) {
@@ -23,6 +24,23 @@ const register = async (req, res, next) => {
 
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Validate name for profanity if provided
+    if (name && name.trim()) {
+      if (containsProfanity(name)) {
+        return res.status(400).json({
+          message: 'Name contains inappropriate language. Please choose a different name.',
+          field: 'name'
+        });
+      }
+    }
+
+    // Validate age if provided
+    if (age !== undefined) {
+      if (age && (age < 1 || age > 150)) {
+        return res.status(400).json({ message: 'Age must be between 1 and 150' });
+      }
     }
 
     // Check if user already exists
@@ -40,7 +58,8 @@ const register = async (req, res, next) => {
     // Create profile for the user
     const profile = await Profile.create({
       userId: user._id,
-      name: '',
+      name: name ? name.trim() : '',
+      age: age || undefined,
       points: 0,
       loginStreak: 0
     });

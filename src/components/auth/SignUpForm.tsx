@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from "@/components/ui/use-toast";
 import { UserPlus, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { profileAPI } from '@/lib/apiClient';
 
 // Zod schema for sign-up including profile fields
 const signUpSchema = z.object({
@@ -43,27 +42,8 @@ export const SignUpForm: React.FC = () => {
   const onSubmit = async (data: SignUpFormData) => {
     setLoading(true);
     try {
-      // Register the user
-      await registerUser(data.email, data.password);
-
-      // Get the user ID from localStorage or context
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Decode token to get user ID (simple approach - in production use a library)
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userId = payload.id;
-
-        // Update profile with name and age
-        try {
-          await profileAPI.updateProfile(userId, {
-            name: data.name,
-            age: data.age
-          });
-        } catch (profileError) {
-          console.error('Error updating profile:', profileError);
-          // Don't block user - they can update later
-        }
-      }
+      // Register the user with name and age included
+      await registerUser(data.email, data.password, data.name, data.age);
 
       toast({
         title: "Sign Up Successful!",
@@ -74,11 +54,21 @@ export const SignUpForm: React.FC = () => {
     } catch (error: any) {
       console.error('Sign Up error:', error);
       const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
-      toast({
-        title: 'Error during Sign Up',
-        description: errorMessage,
-        variant: "destructive",
-      });
+
+      // Specific handling for name profanity during registration
+      if (error.response?.data?.field === 'name') {
+        toast({
+          title: 'Invalid Name',
+          description: 'Your name contains inappropriate language. Please choose a different name.',
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: 'Error during Sign Up',
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
