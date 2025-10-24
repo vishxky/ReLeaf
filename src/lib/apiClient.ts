@@ -73,6 +73,7 @@ export interface CommunityPost {
   likes: number;
   comments: number;
   isDemo: boolean;
+  isPinned: boolean;
   createdAt: string;
   author: {
     id: string;

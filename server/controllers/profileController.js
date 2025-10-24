@@ -1,4 +1,5 @@
 const Profile = require('../models/Profile');
+const { containsProfanity } = require('../utils/profanityFilter');
 
 // @desc    Get user profile
 // @route   GET /api/profiles/:userId
@@ -46,8 +47,18 @@ const updateProfile = async (req, res, next) => {
       return res.status(404).json({ message: 'Profile not found' });
     }
 
-    // Update fields if provided
-    if (name !== undefined) profile.name = name;
+    // Validate name for profanity
+    if (name !== undefined && name.trim()) {
+      if (containsProfanity(name)) {
+        return res.status(400).json({
+          message: 'Name contains inappropriate language. Please choose a different name.',
+          field: 'name'
+        });
+      }
+      profile.name = name.trim();
+    }
+
+    // Update age if provided
     if (age !== undefined) {
       if (age && (age < 1 || age > 150)) {
         return res.status(400).json({ message: 'Age must be between 1 and 150' });

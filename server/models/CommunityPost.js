@@ -31,6 +31,10 @@ const communityPostSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPinned: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

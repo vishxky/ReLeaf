@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Calendar, MapPin, Clock, Leaf, Heart, MessageSquare, Repeat, User, Flag, Plus, Trash2 } from 'lucide-react';
+import { Users, Calendar, MapPin, Clock, Leaf, Heart, MessageSquare, Repeat, User, Flag, Plus, Trash2, Pin } from 'lucide-react';
 import { communityAPI, type CommunityPost } from '@/lib/apiClient';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -84,11 +84,22 @@ const Community = () => {
       });
     } catch (error: any) {
       console.error('Error creating post:', error);
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to create post',
-        variant: 'destructive'
-      });
+      const errorMessage = error.response?.data?.message || 'Failed to create post';
+
+      // Handle rate limiting (12-hour timeout)
+      if (error.response?.status === 429) {
+        toast({
+          title: 'Rate Limited',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive'
+        });
+      }
     } finally {
       setPosting(false);
     }
@@ -263,6 +274,9 @@ const Community = () => {
                               {posting ? 'Posting...' : 'Post'}
                             </Button>
                           </div>
+                          <div className="text-xs text-leafy-500 mt-1">
+                            Note: Posts containing inappropriate language will be automatically filtered.
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -293,12 +307,18 @@ const Community = () => {
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium text-leafy-800 flex items-center">
-                                  {post.author.name}
-                                  {post.isDemo && (
-                                    <Badge variant="outline" className="ml-2 text-xs">Demo</Badge>
-                                  )}
-                                </div>
+                              <div className="font-medium text-leafy-800 flex items-center">
+                                {post.author.name}
+                                {post.isDemo && (
+                                  <Badge variant="outline" className="ml-2 text-xs">Demo</Badge>
+                                )}
+                                {post.isPinned && (
+                                  <Badge variant="secondary" className="ml-2 text-xs bg-amber-100 text-amber-800 border-amber-300">
+                                    <Pin className="h-3 w-3 mr-1" />
+                                    Pinned
+                                  </Badge>
+                                )}
+                              </div>
                                 <div className="text-xs text-leafy-600 flex items-center">
                                   <span>@{post.author.username}</span>
                                   <span className="mx-1">•</span>

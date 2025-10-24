@@ -69,11 +69,21 @@ export const ProfileForm: React.FC = () => {
     } catch (error: any) {
       console.error('Error updating profile:', error);
       const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
-      toast({
-        title: "Error updating profile",
-        description: errorMessage,
-        variant: "destructive",
-      });
+
+      // Check if it's a profanity error
+      if (error.response?.data?.field === 'name') {
+        toast({
+          title: "Invalid Name",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error updating profile",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

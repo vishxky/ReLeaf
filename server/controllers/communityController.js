@@ -1,5 +1,7 @@
 const CommunityPost = require('../models/CommunityPost');
 const Profile = require('../models/Profile');
+const User = require('../models/User');
+const { cleanProfanity } = require('../utils/profanityFilter');
 
 // @desc    Get all community posts
 // @route   GET /api/community/posts
@@ -8,15 +10,23 @@ const getPosts = async (req, res, next) => {
   try {
     const { limit = 20, skip = 0 } = req.query;
 
-    const posts = await CommunityPost.find()
+    // Get pinned posts first (sorted by creation date desc), then non-pinned posts
+    const pinnedPosts = await CommunityPost.find({ isPinned: true })
+      .populate('userId', 'email')
+      .sort({ createdAt: -1 });
+
+    const regularPosts = await CommunityPost.find({ isPinned: { $ne: true } })
       .populate('userId', 'email')
       .sort({ createdAt: -1 })
       .skip(parseInt(skip))
-      .limit(parseInt(limit));
+      .limit(parseInt(limit) - pinnedPosts.length);
+
+    // Combine posts: pinned first, then regular posts
+    const allPosts = [...pinnedPosts, ...regularPosts];
 
     // Get profile info for each post
     const postsWithProfiles = await Promise.all(
-      posts.map(async (post) => {
+      allPosts.map(async (post) => {
         const profile = await Profile.findOne({ userId: post.userId._id });
         return {
           id: post._id,
@@ -24,6 +34,7 @@ const getPosts = async (req, res, next) => {
           likes: post.likes.length,
           comments: post.comments.length,
           isDemo: post.isDemo,
+          isPinned: post.isPinned,
           createdAt: post.createdAt,
           author: {
             id: post.userId._id,
@@ -59,11 +70,33 @@ const createPost = async (req, res, next) => {
       return res.status(400).json({ message: 'Post content cannot exceed 1000 characters' });
     }
 
+    // Check 12-hour post timeout
+    const user = await User.findById(req.user._id);
+    if (user.lastPostTime) {
+      const lastPostTime = new Date(user.lastPostTime);
+      const now = new Date();
+      const timeDiff = now.getTime() - lastPostTime.getTime();
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+      if (hoursDiff < 12) {
+        const remainingHours = Math.ceil(12 - hoursDiff);
+        return res.status(429).json({
+          message: `You can only post once every 12 hours. Please wait ${remainingHours} more hour${remainingHours > 1 ? 's' : ''} before posting again.`
+        });
+      }
+    }
+
+    // Clean profanity from content (replace with ***)
+    const cleanedContent = cleanProfanity(content.trim());
+
     const post = await CommunityPost.create({
       userId: req.user._id,
-      content: content.trim(),
+      content: cleanedContent,
       isDemo: false
     });
+
+    // Update user's last post time
+    await User.findByIdAndUpdate(req.user._id, { lastPostTime: new Date() });
 
     const profile = await Profile.findOne({ userId: req.user._id });
 
@@ -76,6 +109,7 @@ const createPost = async (req, res, next) => {
         likes: 0,
         comments: 0,
         isDemo: false,
+        isPinned: false,
         createdAt: post.createdAt,
         author: {
           id: req.user._id,
