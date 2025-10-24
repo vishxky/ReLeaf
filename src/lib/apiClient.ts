@@ -56,6 +56,31 @@ export interface AuthResponse {
   profile: Profile;
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  name: string;
+  username: string;
+  email: string;
+  points: number;
+  loginStreak: number;
+  joinedDate: string;
+}
+
+export interface CommunityPost {
+  id: string;
+  content: string;
+  likes: number;
+  comments: number;
+  isDemo: boolean;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    username: string;
+  };
+}
+
 // Authentication API
 export const authAPI = {
   register: async (email: string, password: string): Promise<AuthResponse> => {
@@ -133,13 +158,72 @@ export const rewardAPI = {
     return response.data;
   },
 
-  redeemReward: async (id: string): Promise<{ 
-    success: boolean; 
+  redeemReward: async (id: string): Promise<{
+    success: boolean;
     message: string;
     pointsSpent: number;
     remainingPoints: number;
   }> => {
     const response = await api.post(`/rewards/${id}/redeem`);
+    return response.data;
+  }
+};
+
+// Leaderboard API
+export const leaderboardAPI = {
+  getGlobalLeaderboard: async (limit = 50): Promise<{
+    success: boolean;
+    leaderboard: LeaderboardEntry[];
+    totalUsers: number;
+  }> => {
+    const response = await api.get(`/leaderboard/global?limit=${limit}`);
+    return response.data;
+  },
+
+  getUserRank: async (userId: string): Promise<{
+    success: boolean;
+    rank: number;
+    points: number;
+  }> => {
+    const response = await api.get(`/leaderboard/rank/${userId}`);
+    return response.data;
+  }
+};
+
+// Community API
+export const communityAPI = {
+  getPosts: async (limit = 20, skip = 0): Promise<{
+    success: boolean;
+    posts: CommunityPost[];
+    total: number;
+  }> => {
+    const response = await api.get(`/community/posts?limit=${limit}&skip=${skip}`);
+    return response.data;
+  },
+
+  createPost: async (content: string): Promise<{
+    success: boolean;
+    message: string;
+    post: CommunityPost;
+  }> => {
+    const response = await api.post('/community/posts', { content });
+    return response.data;
+  },
+
+  toggleLike: async (postId: string): Promise<{
+    success: boolean;
+    liked: boolean;
+    likesCount: number;
+  }> => {
+    const response = await api.post(`/community/posts/${postId}/like`);
+    return response.data;
+  },
+
+  deletePost: async (postId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    const response = await api.delete(`/community/posts/${postId}`);
     return response.data;
   }
 };

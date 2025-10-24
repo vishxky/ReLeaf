@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { rewardAPI, type Reward } from '@/lib/apiClient';
+import { RewardRedemptionCelebration } from '@/components/RewardRedemptionCelebration';
 
 const Rewards = () => {
   const [activeTab, setActiveTab] = useState("marketplace");
@@ -18,6 +19,8 @@ const Rewards = () => {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [loadingRewards, setLoadingRewards] = useState(true);
   const [errorRewards, setErrorRewards] = useState<string | null>(null);
+  const [celebrationOpen, setCelebrationOpen] = useState(false);
+  const [redeemedReward, setRedeemedReward] = useState<{ title: string; points: number } | null>(null);
 
   useEffect(() => {
     const fetchRewards = async () => {
@@ -47,19 +50,23 @@ const Rewards = () => {
   const handleRedeem = async (reward: Reward) => {
     try {
       const result = await rewardAPI.redeemReward(reward.id);
-      toast({ 
-        title: "Success!", 
-        description: result.message,
+
+      // Set celebration data
+      setRedeemedReward({
+        title: reward.title,
+        points: reward.pointsCost
       });
+      setCelebrationOpen(true);
+
       // Refresh profile to get updated points
       await refreshProfile();
     } catch (err: any) {
       console.error("Error redeeming reward:", err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to redeem reward.';
-      toast({ 
-        title: "Error", 
-        description: errorMessage, 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
       });
     }
   }
@@ -189,6 +196,19 @@ const Rewards = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Celebration Modal */}
+      {redeemedReward && (
+        <RewardRedemptionCelebration
+          isOpen={celebrationOpen}
+          onClose={() => {
+            setCelebrationOpen(false);
+            setRedeemedReward(null);
+          }}
+          rewardTitle={redeemedReward.title}
+          pointsSpent={redeemedReward.points}
+        />
+      )}
     </div>
   );
 };

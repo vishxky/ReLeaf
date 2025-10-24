@@ -2,6 +2,7 @@ require('dotenv').config();
 const connectDB = require('../config/db');
 const seedChallenges = require('./challengeSeeder');
 const seedRewards = require('./rewardSeeder');
+const seedCommunityPosts = require('./communitySeeder');
 
 const seedDatabase = async () => {
   try {
@@ -11,6 +12,7 @@ const seedDatabase = async () => {
     console.log('\nSeeding database...');
     await seedChallenges();
     await seedRewards();
+    await seedCommunityPosts();
 
     console.log('\n✓ Database seeded successfully!');
     process.exit(0);

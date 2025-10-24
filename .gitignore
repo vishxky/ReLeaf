@@ -26,6 +26,7 @@ server/.env.local
 # Documentation (internal)
 IMPLEMENTATION_SUMMARY.md
 .plan.md
+TASKS.md
 
 # Editor directories and files
 .vscode/*

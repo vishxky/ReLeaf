@@ -7,7 +7,7 @@ const rewards = [
     description: 'Stainless steel insulated water bottle (500ml)',
     type: 'marketplace',
     pointsCost: 200,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop',
     partnerName: 'EcoStore',
     isActive: true
   },
@@ -16,7 +16,7 @@ const rewards = [
     description: 'Set of 5 organic cotton shopping bags',
     type: 'marketplace',
     pointsCost: 150,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&h=400&fit=crop',
     partnerName: 'GreenGoods',
     isActive: true
   },
@@ -25,7 +25,7 @@ const rewards = [
     description: 'Travel-friendly bamboo cutlery with carrying case',
     type: 'marketplace',
     pointsCost: 180,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1534670007418-fbb7f6cf32c3?w=400&h=400&fit=crop',
     partnerName: 'EcoStore',
     isActive: true
   },
@@ -34,7 +34,7 @@ const rewards = [
     description: 'Portable solar charger for smartphones',
     type: 'marketplace',
     pointsCost: 400,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=400&h=400&fit=crop',
     partnerName: 'SolarTech',
     isActive: true
   },
@@ -43,7 +43,7 @@ const rewards = [
     description: '100% organic cotton eco-friendly t-shirt',
     type: 'marketplace',
     pointsCost: 250,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
     partnerName: 'EcoWear',
     isActive: true
   },
@@ -54,7 +54,7 @@ const rewards = [
     description: 'Donate to plant 10 trees in deforested areas',
     type: 'donation',
     pointsCost: 300,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=400&fit=crop',
     partnerName: 'Trees for Future',
     isActive: true
   },
@@ -63,7 +63,7 @@ const rewards = [
     description: 'Support ocean plastic cleanup efforts',
     type: 'donation',
     pointsCost: 250,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=400&fit=crop',
     partnerName: 'Ocean Conservancy',
     isActive: true
   },
@@ -72,7 +72,7 @@ const rewards = [
     description: 'Contribute to endangered species protection',
     type: 'donation',
     pointsCost: 350,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=400&h=400&fit=crop',
     partnerName: 'Wildlife Fund',
     isActive: true
   },
@@ -81,7 +81,7 @@ const rewards = [
     description: 'Support solar panel installation in developing communities',
     type: 'donation',
     pointsCost: 500,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=400&fit=crop',
     partnerName: 'Solar Aid',
     isActive: true
   },
@@ -92,7 +92,7 @@ const rewards = [
     description: 'Exclusive guided tour of a sustainable farm or eco-resort',
     type: 'exclusive',
     pointsCost: 800,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=400&fit=crop',
     partnerName: 'EcoTours',
     isActive: true
   },
@@ -101,7 +101,7 @@ const rewards = [
     description: 'Premium course on sustainable living and zero-waste lifestyle',
     type: 'exclusive',
     pointsCost: 350,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=400&fit=crop',
     partnerName: 'GreenAcademy',
     isActive: true
   },
@@ -110,7 +110,7 @@ const rewards = [
     description: 'Curated box of premium sustainable products',
     type: 'exclusive',
     pointsCost: 600,
-    imageUrl: null,
+    imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&h=400&fit=crop',
     partnerName: 'EcoBox',
     isActive: true
   }

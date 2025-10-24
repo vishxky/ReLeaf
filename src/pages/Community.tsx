@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,49 +7,131 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Calendar, MapPin, Clock, Leaf, Heart, MessageSquare, Repeat, User, Flag } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea";
+import { Users, Calendar, MapPin, Clock, Leaf, Heart, MessageSquare, Repeat, User, Flag, Plus, Trash2 } from 'lucide-react';
+import { communityAPI, type CommunityPost } from '@/lib/apiClient';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState("feed");
   const [isJoinTeamDialogOpen, setIsJoinTeamDialogOpen] = useState(false);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newPost, setNewPost] = useState('');
+  const [posting, setPosting] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
   
-  // Dummy feed data
-  const feedItems = [
-    {
-      id: 1,
-      user: { name: "Emma Rodriguez", username: "ecoemma", avatar: "https://picsum.photos/id/21/40/40" },
-      content: "Just completed my 30-day zero waste challenge! It was tough but so rewarding. I've learned so many ways to reduce my waste that I'll definitely keep doing. My next goal is to help my workplace reduce their waste too! #zerowaste #sustainableliving",
-      image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=800&h=320&fit=crop",
-      likes: 42,
-      comments: 8,
-      shares: 5,
-      time: "2 hours ago",
-      isLiked: false
-    },
-    {
-      id: 2,
-      user: { name: "Zero Waste Community", username: "zerowastecommunity", avatar: "https://picsum.photos/id/22/40/40", isGroup: true },
-      content: "This weekend's community clean-up was a huge success! Together we collected over 200 pounds of trash from the local beach. Thank you to everyone who participated! 🌊🌎♻️",
-      image: "https://images.unsplash.com/photo-1618477388954-7852f32655ec?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=800&h=320&fit=crop",
-      likes: 86,
-      comments: 15,
-      shares: 23,
-      time: "5 hours ago",
-      isLiked: true
-    },
-    {
-      id: 3,
-      user: { name: "Marcus Chen", username: "greenmarc", avatar: "https://picsum.photos/id/23/40/40" },
-      content: "My little balcony garden is thriving! Started with just a few herbs and now I'm growing tomatoes, lettuce, and peppers. Urban gardening is easier than you think! Happy to share tips with anyone interested in starting their own.",
-      image: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=800&h=320&fit=crop",
-      likes: 31,
-      comments: 12,
-      shares: 3,
-      time: "1 day ago",
-      isLiked: false
-    },
-  ];
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const data = await communityAPI.getPosts(50);
+      setPosts(data.posts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load community posts',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!user) {
+      toast({
+        title: 'Please login',
+        description: 'You need to be logged in to create posts',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!newPost.trim()) {
+      toast({
+        title: 'Empty post',
+        description: 'Please write something before posting',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (newPost.length > 1000) {
+      toast({
+        title: 'Post too long',
+        description: 'Post cannot exceed 1000 characters',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setPosting(true);
+    try {
+      const result = await communityAPI.createPost(newPost);
+      setPosts([result.post, ...posts]);
+      setNewPost('');
+      toast({
+        title: 'Success!',
+        description: 'Your post has been shared with the community'
+      });
+    } catch (error: any) {
+      console.error('Error creating post:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to create post',
+        variant: 'destructive'
+      });
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: 'Please login',
+        description: 'You need to be logged in to like posts',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const result = await communityAPI.toggleLike(postId);
+      setPosts(posts.map(post =>
+        post.id === postId
+          ? { ...post, likes: result.likesCount }
+          : post
+      ));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    try {
+      await communityAPI.deletePost(postId);
+      setPosts(posts.filter(post => post.id !== postId));
+      toast({
+        title: 'Post deleted',
+        description: 'Your post has been removed'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to delete post',
+        variant: 'destructive'
+      });
+    }
+  };
   
   // Dummy team data
   const teams = [
@@ -158,96 +240,107 @@ const Community = () => {
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-3">
                         <Avatar>
-                          <AvatarImage src="https://picsum.photos/id/4/40/40" alt="Your Avatar" />
-                          <AvatarFallback>SG</AvatarFallback>
+                          <AvatarFallback className="bg-leafy-200 text-leafy-800">
+                            {user?.email?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 bg-gray-100 rounded-lg p-3">
-                          <p className="text-leafy-600 text-sm">Share your eco-friendly journey...</p>
+                        <div className="flex-1">
+                          <Textarea
+                            placeholder="Share your eco-friendly journey..."
+                            value={newPost}
+                            onChange={(e) => setNewPost(e.target.value)}
+                            className="min-h-[80px] resize-none border-leafy-200 focus:border-leafy-400"
+                            maxLength={1000}
+                          />
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-xs text-leafy-500">{newPost.length}/1000</span>
+                            <Button
+                              className="eco-button"
+                              size="sm"
+                              onClick={handleCreatePost}
+                              disabled={posting || !newPost.trim()}
+                            >
+                              {posting ? 'Posting...' : 'Post'}
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex justify-between mt-4">
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>Photo</span>
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>Challenge</span>
-                        </Button>
-                        <Button className="eco-button" size="sm">Post</Button>
                       </div>
                     </CardContent>
                   </Card>
                   
                   {/* Feed items */}
-                  {feedItems.map(item => (
-                    <Card key={item.id} className="mb-6">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center">
-                            <Avatar className="h-10 w-10 mr-3">
-                              <AvatarImage src={item.user.avatar} alt={item.user.name} />
-                              <AvatarFallback className="bg-leafy-200 text-leafy-800">
-                                {item.user.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-leafy-800 flex items-center">
-                                {item.user.name}
-                                {item.user.isGroup && (
-                                  <Badge variant="outline" className="ml-2 text-xs">Group</Badge>
-                                )}
-                              </div>
-                              <div className="text-xs text-leafy-600 flex items-center">
-                                <span>@{item.user.username}</span>
-                                <span className="mx-1">•</span>
-                                <span>{item.time}</span>
+                  {loading ? (
+                    <Card className="mb-6">
+                      <CardContent className="py-8">
+                        <div className="text-center text-leafy-600">Loading posts...</div>
+                      </CardContent>
+                    </Card>
+                  ) : posts.length === 0 ? (
+                    <Card className="mb-6">
+                      <CardContent className="py-8">
+                        <div className="text-center text-leafy-600">No posts yet. Be the first to share!</div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    posts.map(post => (
+                      <Card key={post.id} className="mb-6">
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center">
+                              <Avatar className="h-10 w-10 mr-3">
+                                <AvatarFallback className="bg-leafy-200 text-leafy-800">
+                                  {post.author.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium text-leafy-800 flex items-center">
+                                  {post.author.name}
+                                  {post.isDemo && (
+                                    <Badge variant="outline" className="ml-2 text-xs">Demo</Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-leafy-600 flex items-center">
+                                  <span>@{post.author.username}</span>
+                                  <span className="mx-1">•</span>
+                                  <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                </div>
                               </div>
                             </div>
+                            {user && post.author.id === user.id && !post.isDemo && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-500 hover:text-red-700"
+                                onClick={() => handleDelete(post.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-leafy-600">
-                              <circle cx="12" cy="12" r="1" />
-                              <circle cx="19" cy="12" r="1" />
-                              <circle cx="5" cy="12" r="1" />
-                            </svg>
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <p className="text-leafy-700 whitespace-pre-line">{item.content}</p>
-                        {item.image && (
-                          <div className="mt-3 rounded-lg overflow-hidden">
-                            <img 
-                              src={item.image} 
-                              alt="Post content" 
-                              className="w-full object-cover h-64"
-                            />
+                        </CardHeader>
+                        <CardContent className="pb-2">
+                          <p className="text-leafy-700 whitespace-pre-line">{post.content}</p>
+                        </CardContent>
+                        <CardFooter className="pt-1">
+                          <div className="flex justify-between w-full">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-1 text-leafy-600 hover:text-red-500"
+                              onClick={() => handleLike(post.id)}
+                            >
+                              <Heart className="h-4 w-4" />
+                              <span>{post.likes}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1 text-leafy-600">
+                              <MessageSquare className="h-4 w-4" />
+                              <span>{post.comments}</span>
+                            </Button>
                           </div>
-                        )}
-                      </CardContent>
-                      <CardFooter className="pt-1">
-                        <div className="flex justify-between w-full">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`flex items-center gap-1 ${item.isLiked ? 'text-red-500' : 'text-leafy-600'}`}
-                          >
-                            <Heart className="h-4 w-4" fill={item.isLiked ? "currentColor" : "none"} />
-                            <span>{item.likes}</span>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center gap-1 text-leafy-600">
-                            <MessageSquare className="h-4 w-4" />
-                            <span>{item.comments}</span>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center gap-1 text-leafy-600">
-                            <Repeat className="h-4 w-4" />
-                            <span>{item.shares}</span>
-                          </Button>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  ))}
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
                   
                   <div className="flex justify-center mt-6">
                     <Button variant="outline">Load More Posts</Button>

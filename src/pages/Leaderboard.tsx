@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,47 +7,38 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Leaf, Trophy, Users, Award, Search } from 'lucide-react';
+import { leaderboardAPI, type LeaderboardEntry } from '@/lib/apiClient';
+import { useAuth } from '@/context/AuthContext';
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState("global");
   const [timeframe, setTimeframe] = useState("weekly");
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const { user } = useAuth();
   
-  // Dummy user data - global leaderboard
-  const globalLeaders = [
-    { rank: 1, name: "Emma Rodriguez", username: "ecoemma", points: 1245, change: "up", avatar: "https://picsum.photos/id/1/40/40" },
-    { rank: 2, name: "Marcus Chen", username: "greenmarc", points: 1180, change: "same", avatar: "https://picsum.photos/id/2/40/40" },
-    { rank: 3, name: "Olivia Taylor", username: "olivgreen", points: 1140, change: "up", avatar: "https://picsum.photos/id/3/40/40" },
-    { rank: 4, name: "Sam Green", username: "ecowarrior", points: 875, change: "down", avatar: "https://picsum.photos/id/4/40/40" },
-    { rank: 5, name: "Jamie Wilson", username: "ecojamie", points: 820, change: "up", avatar: "https://picsum.photos/id/5/40/40" },
-    { rank: 6, name: "Alex Patel", username: "zerowastealex", points: 790, change: "down", avatar: "https://picsum.photos/id/6/40/40" },
-    { rank: 7, name: "Taylor Johnson", username: "ecotay", points: 760, change: "up", avatar: "https://picsum.photos/id/7/40/40" },
-    { rank: 8, name: "Jordan Smith", username: "jordaneco", points: 735, change: "same", avatar: "https://picsum.photos/id/8/40/40" },
-    { rank: 9, name: "Casey Brown", username: "caseyearth", points: 710, change: "up", avatar: "https://picsum.photos/id/9/40/40" },
-    { rank: 10, name: "Riley Garcia", username: "sustainriley", points: 690, change: "down", avatar: "https://picsum.photos/id/10/40/40" },
-  ];
-  
-  // Dummy user data - friends leaderboard
-  const friendsLeaders = [
-    { rank: 1, name: "Jamie Wilson", username: "ecojamie", points: 820, change: "up", avatar: "https://picsum.photos/id/5/40/40", friend: true },
-    { rank: 2, name: "Sam Green", username: "ecowarrior", points: 875, change: "same", avatar: "https://picsum.photos/id/4/40/40", friend: true, isUser: true },
-    { rank: 3, name: "Alex Patel", username: "zerowastealex", points: 790, change: "down", avatar: "https://picsum.photos/id/6/40/40", friend: true },
-    { rank: 4, name: "Casey Brown", username: "caseyearth", points: 710, change: "up", avatar: "https://picsum.photos/id/9/40/40", friend: true },
-    { rank: 5, name: "Riley Garcia", username: "sustainriley", points: 690, change: "same", avatar: "https://picsum.photos/id/10/40/40", friend: true },
-  ];
-  
-  // Dummy team data
-  const teamsLeaders = [
-    { rank: 1, name: "Green Guardians", members: 12, points: 8450, change: "up", avatar: "https://picsum.photos/id/11/40/40" },
-    { rank: 2, name: "Eco Warriors", members: 8, points: 7920, change: "same", avatar: "https://picsum.photos/id/12/40/40" },
-    { rank: 3, name: "Planet Protectors", members: 15, points: 7650, change: "up", avatar: "https://picsum.photos/id/13/40/40", userTeam: true },
-    { rank: 4, name: "Zero Waste Heroes", members: 10, points: 7340, change: "down", avatar: "https://picsum.photos/id/14/40/40" },
-    { rank: 5, name: "Climate Champions", members: 9, points: 7120, change: "up", avatar: "https://picsum.photos/id/15/40/40" },
-    { rank: 6, name: "Sustainable Squad", members: 7, points: 6890, change: "down", avatar: "https://picsum.photos/id/16/40/40" },
-    { rank: 7, name: "Forest Friends", members: 11, points: 6680, change: "up", avatar: "https://picsum.photos/id/17/40/40" },
-    { rank: 8, name: "Ocean Defenders", members: 6, points: 6540, change: "same", avatar: "https://picsum.photos/id/18/40/40" },
-    { rank: 9, name: "Urban Gardeners", members: 14, points: 6380, change: "up", avatar: "https://picsum.photos/id/19/40/40" },
-    { rank: 10, name: "Renewable Rangers", members: 8, points: 6150, change: "down", avatar: "https://picsum.photos/id/20/40/40" },
-  ];
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      try {
+        const data = await leaderboardAPI.getGlobalLeaderboard(50);
+        setLeaderboard(data.leaderboard);
+
+        // Get user's rank if logged in
+        if (user) {
+          const rankData = await leaderboardAPI.getUserRank(user.id);
+          setUserRank(rankData.rank);
+        }
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, [user]);
   
   const renderRankChange = (change) => {
     switch(change) {
@@ -116,7 +107,7 @@ const Leaderboard = () => {
                     <CardTitle className="flex justify-between items-center">
                       <span>Global Rankings</span>
                       <div className="text-sm font-normal text-leafy-600">
-                        Your rank: <span className="font-bold text-leafy-800">#4</span>
+                        Your rank: <span className="font-bold text-leafy-800">#{userRank || 'N/A'}</span>
                       </div>
                     </CardTitle>
                   </CardHeader>
@@ -132,51 +123,64 @@ const Leaderboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {globalLeaders.map((leader) => (
-                            <tr 
-                              key={leader.rank} 
-                              className={`border-b border-leafy-50 hover:bg-leafy-50/50 ${leader.username === 'ecowarrior' ? 'bg-leafy-50/70' : ''}`}
-                            >
-                              <td className="py-3 px-2">
-                                {leader.rank <= 3 ? (
-                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-50">
-                                    <Trophy className={`h-4 w-4 ${
-                                      leader.rank === 1 ? 'text-amber-500' : 
-                                      leader.rank === 2 ? 'text-gray-400' : 
-                                      'text-amber-700'
-                                    }`} />
-                                  </div>
-                                ) : (
-                                  <div className="w-8 h-8 flex items-center justify-center text-leafy-600">
-                                    {leader.rank}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="py-3 px-2">
-                                <div className="flex items-center">
-                                  <Avatar className="h-8 w-8 mr-3">
-                                    <AvatarImage src={leader.avatar} alt={leader.name} />
-                                    <AvatarFallback className="bg-leafy-200 text-leafy-800">
-                                      {leader.name.charAt(0)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="font-medium text-leafy-800">{leader.name}</div>
-                                    <div className="text-xs text-leafy-600">@{leader.username}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-3 px-2 text-right">
-                                <div className="flex items-center justify-end gap-1">
-                                  <Leaf className="h-4 w-4 text-leafy-500" />
-                                  <span className="font-medium text-leafy-800">{leader.points}</span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-2 text-center">
-                                {renderRankChange(leader.change)}
+                          {loading ? (
+                            <tr>
+                              <td colSpan={4} className="py-8 text-center text-leafy-600">
+                                Loading leaderboard...
                               </td>
                             </tr>
-                          ))}
+                          ) : leaderboard.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="py-8 text-center text-leafy-600">
+                                No users found
+                              </td>
+                            </tr>
+                          ) : (
+                            leaderboard.map((leader) => (
+                              <tr
+                                key={leader.userId}
+                                className={`border-b border-leafy-50 hover:bg-leafy-50/50 ${user && leader.userId === user.id ? 'bg-leafy-50/70' : ''}`}
+                              >
+                                <td className="py-3 px-2">
+                                  {leader.rank <= 3 ? (
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-50">
+                                      <Trophy className={`h-4 w-4 ${
+                                        leader.rank === 1 ? 'text-amber-500' :
+                                        leader.rank === 2 ? 'text-gray-400' :
+                                        'text-amber-700'
+                                      }`} />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 flex items-center justify-center text-leafy-600">
+                                      {leader.rank}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="py-3 px-2">
+                                  <div className="flex items-center">
+                                    <Avatar className="h-8 w-8 mr-3">
+                                      <AvatarFallback className="bg-leafy-200 text-leafy-800">
+                                        {leader.name.charAt(0)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-medium text-leafy-800">{leader.name}</div>
+                                      <div className="text-xs text-leafy-600">@{leader.username}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-2 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <Leaf className="h-4 w-4 text-leafy-500" />
+                                    <span className="font-medium text-leafy-800">{leader.points.toLocaleString()}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-2 text-center">
+                                  <div className="text-xs text-leafy-500">Streak: {leader.loginStreak}</div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
                         </tbody>
                       </table>
                     </div>

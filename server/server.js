@@ -9,6 +9,8 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profiles');
 const challengeRoutes = require('./routes/challenges');
 const rewardRoutes = require('./routes/rewards');
+const leaderboardRoutes = require('./routes/leaderboard');
+const communityRoutes = require('./routes/community');
 
 // Initialize express app
 const app = express();
@@ -26,6 +28,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/rewards', rewardRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/community', communityRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
