@@ -2,7 +2,7 @@
 
 ReLeaf is an innovative app that transforms sustainability into an engaging game. Its main goal is to bridge the gap between environmental awareness and action by making eco-friendly habits fun, social, and rewarding.
 
-Maintained under [vishxky/ReLeaf](https://github.com/vishxky/ReLeaf).
+Project repository: [vishxky/ReLeaf](https://github.com/vishxky/ReLeaf).
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/f5bb5070-0daa-42c4-a58f-62391fe51973/deploy-status)](https://app.netlify.com/projects/theleafy/deploys)
 
